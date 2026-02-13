@@ -30,8 +30,8 @@ Rcpp::List qraddcol (const Eigen::MatrixXd& Q,
 
 Rcpp::List qraddmcols (const Eigen::MatrixXd& Q,
                        const Eigen::MatrixXd& R,
-                       const int& k, const
-                       Eigen::MatrixXd& U);
+                       const int& k,
+                       const Eigen::MatrixXd& U);
 
 Rcpp::List qraddrow (const Eigen::MatrixXd& Q,
                      const Eigen::MatrixXd& R,
@@ -46,6 +46,13 @@ Rcpp::List qraddmrows (const Eigen::MatrixXd& Q,
 Rcpp::List qrdeleterow (const Eigen::MatrixXd& Q,
                         const Eigen::MatrixXd& R,
                         const int& k);
+Rcpp::List qrdeleterow_checks (const Eigen::MatrixXd& Q,
+                               const Eigen::MatrixXd& R,
+                               const int& k);
+
+Rcpp::List qrdeleterow_claudio (const Eigen::MatrixXd& Q,
+                                const Eigen::MatrixXd& R,
+                                const int& k);
 
 Rcpp::List qrdeletemrows (const Eigen::MatrixXd& Q,
                           const Eigen::MatrixXd& R,

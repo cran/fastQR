@@ -73,7 +73,6 @@ Eigen::VectorXd symmat2vech (const Eigen::MatrixXd& X,
   
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    variable declaration                                  */
-  int index = 0;
   int size = (n * (n + 1)) / 2; // Size of the lower triangular part including diagonal
   
   /* ::::::::::::::::::::::::::::::::::::::::::::::
@@ -137,6 +136,7 @@ Eigen::VectorXd symmat2vech_bycol (const Eigen::MatrixXd& X,
   return result;
 }
 
+// [[Rcpp::export]]
 Eigen::MatrixXd mat_slicing_byrow (const Eigen::MatrixXd& X,
                                    const Eigen::ArrayXi index) {
   
@@ -156,6 +156,7 @@ Eigen::MatrixXd mat_slicing_byrow (const Eigen::MatrixXd& X,
   return((Y(Eigen::all, index)).transpose());
 }
 
+// [[Rcpp::export]]
 Eigen::MatrixXd mat_slicing_byrow2 (const Eigen::MatrixXd& X,
                                     const std::vector<int> index) {
   
@@ -175,6 +176,7 @@ Eigen::MatrixXd mat_slicing_byrow2 (const Eigen::MatrixXd& X,
   return((Y(Eigen::all, index)).transpose());
 }
 
+// [[Rcpp::export]]
 Eigen::MatrixXd mat_slicing_byrow3 (const Eigen::MatrixXd& X,
                                     std::vector<int> index) {
   

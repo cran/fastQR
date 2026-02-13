@@ -4,6 +4,8 @@
 \alias{rupdate}
 \title{Fast updating of the R matrix}
 \arguments{
+\item{X}{the current \eqn{n\times p} matrix, prior to the addition of any rows or columns.}
+
 \item{R}{a \eqn{p\times p} upper triangular matrix.}
 
 \item{U}{either a \eqn{n\times m} matrix or a \eqn{p\times m} matrix of columns or rows to be added.}

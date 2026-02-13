@@ -11,7 +11,7 @@ rdowndate(R, k = NULL, m = NULL, U = NULL, fast = NULL, type = NULL)
 
 \item{k}{position where the columns or the rows are removed.}
 
-\item{m}{number of columns or rows to be removed.}
+\item{m}{number of columns or rows to be removed. It is not required when deleting columns. If NULL, it defaults to the number of columns in \eqn{U}.}
 
 \item{U}{a \eqn{p\times m} matrix of rows to be removed. It should only be provided when rows are being removed.}
 

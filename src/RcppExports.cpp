@@ -141,6 +141,133 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// qr_Qty
+Eigen::VectorXd qr_Qty(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_Qty(SEXP qrSEXP, SEXP tauSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_Qty(qr, tau, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_Qy
+Eigen::VectorXd qr_Qy(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_Qy(SEXP qrSEXP, SEXP tauSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_Qy(qr, tau, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_coef
+Eigen::VectorXd qr_coef(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, const Eigen::VectorXd& y, Rcpp::Nullable<Rcpp::NumericVector> pivot, Rcpp::Nullable<int> rank);
+RcppExport SEXP _fastQR_qr_coef(SEXP qrSEXP, SEXP tauSEXP, SEXP ySEXP, SEXP pivotSEXP, SEXP rankSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type pivot(pivotSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type rank(rankSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_coef(qr, tau, y, pivot, rank));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_fitted
+Eigen::VectorXd qr_fitted(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_fitted(SEXP qrSEXP, SEXP tauSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_fitted(qr, tau, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_resid
+Eigen::VectorXd qr_resid(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_resid(SEXP qrSEXP, SEXP tauSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_resid(qr, tau, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lse_coef
+Eigen::VectorXd qr_lse_coef(const Eigen::MatrixXd& X, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_lse_coef(SEXP XSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lse_coef(X, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lse_fitted
+Eigen::VectorXd qr_lse_fitted(const Eigen::MatrixXd& X, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_lse_fitted(SEXP XSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lse_fitted(X, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lse_resid
+Eigen::VectorXd qr_lse_resid(const Eigen::MatrixXd& X, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_lse_resid(SEXP XSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lse_resid(X, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lse_Qty
+Eigen::VectorXd qr_lse_Qty(const Eigen::MatrixXd& X, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_lse_Qty(SEXP XSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lse_Qty(X, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lse_Qy
+Eigen::VectorXd qr_lse_Qy(const Eigen::MatrixXd& X, const Eigen::VectorXd& y);
+RcppExport SEXP _fastQR_qr_lse_Qy(SEXP XSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lse_Qy(X, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // qr
 Rcpp::List qr(const Eigen::MatrixXd& X, Rcpp::Nullable<bool> complete, Rcpp::Nullable<std::string> type, Rcpp::Nullable<int> nb);
 RcppExport SEXP _fastQR_qr(SEXP XSEXP, SEXP completeSEXP, SEXP typeSEXP, SEXP nbSEXP) {
@@ -189,6 +316,241 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// qraddcol
+Rcpp::List qraddcol(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const Eigen::VectorXd& u);
+RcppExport SEXP _fastQR_qraddcol(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(qraddcol(Q, R, k, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qraddmcols
+Rcpp::List qraddmcols(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const Eigen::MatrixXd& U);
+RcppExport SEXP _fastQR_qraddmcols(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP USEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type U(USEXP);
+    rcpp_result_gen = Rcpp::wrap(qraddmcols(Q, R, k, U));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qraddrow
+Rcpp::List qraddrow(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const Eigen::RowVectorXd& u);
+RcppExport SEXP _fastQR_qraddrow(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP uSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const Eigen::RowVectorXd& >::type u(uSEXP);
+    rcpp_result_gen = Rcpp::wrap(qraddrow(Q, R, k, u));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qraddmrows
+Rcpp::List qraddmrows(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const Eigen::MatrixXd& U);
+RcppExport SEXP _fastQR_qraddmrows(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP USEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type U(USEXP);
+    rcpp_result_gen = Rcpp::wrap(qraddmrows(Q, R, k, U));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qrdeleterow
+Rcpp::List qrdeleterow(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k);
+RcppExport SEXP _fastQR_qrdeleterow(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(qrdeleterow(Q, R, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qrdeletemrows
+Rcpp::List qrdeletemrows(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const int& m);
+RcppExport SEXP _fastQR_qrdeletemrows(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(qrdeletemrows(Q, R, k, m));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qrdeletecol
+Rcpp::List qrdeletecol(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k);
+RcppExport SEXP _fastQR_qrdeletecol(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(qrdeletecol(Q, R, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qrdeletemcols_adj
+Rcpp::List qrdeletemcols_adj(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, const int& k, const int& m);
+RcppExport SEXP _fastQR_qrdeletemcols_adj(SEXP QSEXP, SEXP RSEXP, SEXP kSEXP, SEXP mSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< const int& >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int& >::type m(mSEXP);
+    rcpp_result_gen = Rcpp::wrap(qrdeletemcols_adj(Q, R, k, m));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_thin
+Rcpp::List qr_thin(const Eigen::MatrixXd& X);
+RcppExport SEXP _fastQR_qr_thin(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_thin(X));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_fast
+Rcpp::List qr_fast(const Eigen::MatrixXd& X, Rcpp::Nullable<double> tol, Rcpp::Nullable<bool> pivot);
+RcppExport SEXP _fastQR_qr_fast(SEXP XSEXP, SEXP tolSEXP, SEXP pivotSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<bool> >::type pivot(pivotSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_fast(X, tol, pivot));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_Q
+Eigen::MatrixXd qr_Q(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau, Rcpp::Nullable<int> rank, Rcpp::Nullable<bool> complete);
+RcppExport SEXP _fastQR_qr_Q(SEXP qrSEXP, SEXP tauSEXP, SEXP rankSEXP, SEXP completeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<bool> >::type complete(completeSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_Q(qr, tau, rank, complete));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_R
+Eigen::MatrixXd qr_R(const Eigen::MatrixXd& qr, Rcpp::Nullable<int> rank, Rcpp::Nullable<Rcpp::IntegerVector> pivot, Rcpp::Nullable<bool> complete);
+RcppExport SEXP _fastQR_qr_R(SEXP qrSEXP, SEXP rankSEXP, SEXP pivotSEXP, SEXP completeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::IntegerVector> >::type pivot(pivotSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<bool> >::type complete(completeSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_R(qr, rank, pivot, complete));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_pivot2perm
+Eigen::MatrixXd qr_pivot2perm(const Eigen::VectorXi& pivot);
+RcppExport SEXP _fastQR_qr_pivot2perm(SEXP pivotSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXi& >::type pivot(pivotSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_pivot2perm(pivot));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_X
+Eigen::MatrixXd qr_X(const Eigen::MatrixXd& Q, const Eigen::MatrixXd& R, Rcpp::Nullable<Rcpp::IntegerVector> pivot);
+RcppExport SEXP _fastQR_qr_X(SEXP QSEXP, SEXP RSEXP, SEXP pivotSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type R(RSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::IntegerVector> >::type pivot(pivotSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_X(Q, R, pivot));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_Q_full
+Eigen::MatrixXd qr_Q_full(const Eigen::MatrixXd& qr, const Eigen::VectorXd& tau);
+RcppExport SEXP _fastQR_qr_Q_full(SEXP qrSEXP, SEXP tauSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type qr(qrSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type tau(tauSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_Q_full(qr, tau));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_Q_reduced2full
+Eigen::MatrixXd qr_Q_reduced2full(const Eigen::MatrixXd& Q);
+RcppExport SEXP _fastQR_qr_Q_reduced2full(SEXP QSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type Q(QSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_Q_reduced2full(Q));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lm
+Rcpp::List qr_lm(const Eigen::VectorXd& y, const Eigen::MatrixXd& X, Rcpp::Nullable<Rcpp::NumericMatrix> X_test);
+RcppExport SEXP _fastQR_qr_lm(SEXP ySEXP, SEXP XSEXP, SEXP X_testSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericMatrix> >::type X_test(X_testSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lm(y, X, X_test));
+    return rcpp_result_gen;
+END_RCPP
+}
+// qr_lm_pred
+Rcpp::List qr_lm_pred(const Eigen::VectorXd& y, const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_test);
+RcppExport SEXP _fastQR_qr_lm_pred(SEXP ySEXP, SEXP XSEXP, SEXP X_testSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X_test(X_testSEXP);
+    rcpp_result_gen = Rcpp::wrap(qr_lm_pred(y, X, X_test));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rupdate
 Eigen::MatrixXd rupdate(const Eigen::MatrixXd& X, const Eigen::MatrixXd& R, const Eigen::MatrixXd& U, Rcpp::Nullable<bool> fast, Rcpp::Nullable<std::string> type);
 RcppExport SEXP _fastQR_rupdate(SEXP XSEXP, SEXP RSEXP, SEXP USEXP, SEXP fastSEXP, SEXP typeSEXP) {
@@ -232,6 +594,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// mat_slicing_byrow
+Eigen::MatrixXd mat_slicing_byrow(const Eigen::MatrixXd& X, const Eigen::ArrayXi index);
+RcppExport SEXP _fastQR_mat_slicing_byrow(SEXP XSEXP, SEXP indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Eigen::ArrayXi >::type index(indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(mat_slicing_byrow(X, index));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mat_slicing_byrow2
+Eigen::MatrixXd mat_slicing_byrow2(const Eigen::MatrixXd& X, const std::vector<int> index);
+RcppExport SEXP _fastQR_mat_slicing_byrow2(SEXP XSEXP, SEXP indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const std::vector<int> >::type index(indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(mat_slicing_byrow2(X, index));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mat_slicing_byrow3
+Eigen::MatrixXd mat_slicing_byrow3(const Eigen::MatrixXd& X, std::vector<int> index);
+RcppExport SEXP _fastQR_mat_slicing_byrow3(SEXP XSEXP, SEXP indexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type index(indexSEXP);
+    rcpp_result_gen = Rcpp::wrap(mat_slicing_byrow3(X, index));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_fastQR_qrls", (DL_FUNC) &_fastQR_qrls, 4},
@@ -243,12 +641,43 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fastQR_qrmls", (DL_FUNC) &_fastQR_qrmls, 4},
     {"_fastQR_qrmridge", (DL_FUNC) &_fastQR_qrmridge, 5},
     {"_fastQR_qrmridge_cv", (DL_FUNC) &_fastQR_qrmridge_cv, 7},
+    {"_fastQR_qr_Qty", (DL_FUNC) &_fastQR_qr_Qty, 3},
+    {"_fastQR_qr_Qy", (DL_FUNC) &_fastQR_qr_Qy, 3},
+    {"_fastQR_qr_coef", (DL_FUNC) &_fastQR_qr_coef, 5},
+    {"_fastQR_qr_fitted", (DL_FUNC) &_fastQR_qr_fitted, 3},
+    {"_fastQR_qr_resid", (DL_FUNC) &_fastQR_qr_resid, 3},
+    {"_fastQR_qr_lse_coef", (DL_FUNC) &_fastQR_qr_lse_coef, 2},
+    {"_fastQR_qr_lse_fitted", (DL_FUNC) &_fastQR_qr_lse_fitted, 2},
+    {"_fastQR_qr_lse_resid", (DL_FUNC) &_fastQR_qr_lse_resid, 2},
+    {"_fastQR_qr_lse_Qty", (DL_FUNC) &_fastQR_qr_lse_Qty, 2},
+    {"_fastQR_qr_lse_Qy", (DL_FUNC) &_fastQR_qr_lse_Qy, 2},
     {"_fastQR_qr", (DL_FUNC) &_fastQR_qr, 4},
     {"_fastQR_qrupdate", (DL_FUNC) &_fastQR_qrupdate, 7},
     {"_fastQR_qrdowndate", (DL_FUNC) &_fastQR_qrdowndate, 7},
+    {"_fastQR_qraddcol", (DL_FUNC) &_fastQR_qraddcol, 4},
+    {"_fastQR_qraddmcols", (DL_FUNC) &_fastQR_qraddmcols, 4},
+    {"_fastQR_qraddrow", (DL_FUNC) &_fastQR_qraddrow, 4},
+    {"_fastQR_qraddmrows", (DL_FUNC) &_fastQR_qraddmrows, 4},
+    {"_fastQR_qrdeleterow", (DL_FUNC) &_fastQR_qrdeleterow, 3},
+    {"_fastQR_qrdeletemrows", (DL_FUNC) &_fastQR_qrdeletemrows, 4},
+    {"_fastQR_qrdeletecol", (DL_FUNC) &_fastQR_qrdeletecol, 3},
+    {"_fastQR_qrdeletemcols_adj", (DL_FUNC) &_fastQR_qrdeletemcols_adj, 4},
+    {"_fastQR_qr_thin", (DL_FUNC) &_fastQR_qr_thin, 1},
+    {"_fastQR_qr_fast", (DL_FUNC) &_fastQR_qr_fast, 3},
+    {"_fastQR_qr_Q", (DL_FUNC) &_fastQR_qr_Q, 4},
+    {"_fastQR_qr_R", (DL_FUNC) &_fastQR_qr_R, 4},
+    {"_fastQR_qr_pivot2perm", (DL_FUNC) &_fastQR_qr_pivot2perm, 1},
+    {"_fastQR_qr_X", (DL_FUNC) &_fastQR_qr_X, 3},
+    {"_fastQR_qr_Q_full", (DL_FUNC) &_fastQR_qr_Q_full, 2},
+    {"_fastQR_qr_Q_reduced2full", (DL_FUNC) &_fastQR_qr_Q_reduced2full, 1},
+    {"_fastQR_qr_lm", (DL_FUNC) &_fastQR_qr_lm, 3},
+    {"_fastQR_qr_lm_pred", (DL_FUNC) &_fastQR_qr_lm_pred, 3},
     {"_fastQR_rupdate", (DL_FUNC) &_fastQR_rupdate, 5},
     {"_fastQR_rdowndate", (DL_FUNC) &_fastQR_rdowndate, 6},
     {"_fastQR_set_diff", (DL_FUNC) &_fastQR_set_diff, 2},
+    {"_fastQR_mat_slicing_byrow", (DL_FUNC) &_fastQR_mat_slicing_byrow, 2},
+    {"_fastQR_mat_slicing_byrow2", (DL_FUNC) &_fastQR_mat_slicing_byrow2, 2},
+    {"_fastQR_mat_slicing_byrow3", (DL_FUNC) &_fastQR_mat_slicing_byrow3, 2},
     {NULL, NULL, 0}
 };
 

@@ -376,6 +376,376 @@ qrmridge_cv <- function(Y, X, lambda, k = NULL, seed = NULL, X_test = NULL, type
     .Call(`_fastQR_qrmridge_cv`, Y, X, lambda, k, seed, X_test, type)
 }
 
+#' Multiply Q by a vector using a QR decomposition
+#'
+#' Computes \eqn{Q^\top y}, where \eqn{Q} is the orthogonal matrix from the
+#' QR decomposition stored in compact (Householder) form.
+#'
+#' @param qr numeric matrix containing the QR decomposition in compact form
+#'   (as returned by \code{qr_fast()}).
+#' @param tau numeric vector of Householder coefficients.
+#' @param y numeric vector of length \eqn{n}.
+#'
+#' @return a numeric vector equal to \eqn{Q^\top y}.
+#'
+#' @details
+#' The orthogonal matrix \eqn{Q} is not formed explicitly. The product
+#' \eqn{Q^\top y} is computed efficiently using the Householder reflectors
+#' stored in \code{qr} and \code{tau}.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' qr_res <- fastQR::qr_fast(X)
+#' res1   <- fastQR::qr_Qty(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+#'
+#' ## reference computation
+#' Q    <- base::qr.Q(base::qr(X), complete = TRUE)
+#' res2 <- crossprod(Q, y)
+#'
+#' max(abs(res1 - drop(res2)))
+#'
+qr_Qty <- function(qr, tau, y) {
+    .Call(`_fastQR_qr_Qty`, qr, tau, y)
+}
+
+#' Multiply Q by a vector using a QR decomposition
+#'
+#' Computes \eqn{Q y}, where \eqn{Q} is the orthogonal matrix from the
+#' QR decomposition stored in compact (Householder) form.
+#'
+#' @param qr numeric matrix containing the QR decomposition in compact form
+#'   (as returned by \code{qr_fast()}).
+#' @param tau numeric vector of Householder coefficients.
+#' @param y numeric vector of length \eqn{n}.
+#'
+#' @return a numeric vector equal to \eqn{Q y}.
+#'
+#' @details
+#' The orthogonal matrix \eqn{Q} is not formed explicitly. The product
+#' \eqn{Q y} is computed efficiently using the Householder reflectors
+#' stored in \code{qr} and \code{tau}.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' qr_res <- fastQR::qr_fast(X)
+#' res1   <- fastQR::qr_Qy(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+#'
+#' ## reference computation
+#' Q    <- base::qr.Q(base::qr(X), complete = TRUE)
+#' res2 <- Q %*% y
+#'
+#' max(abs(res1 - drop(res2)))
+#'
+qr_Qy <- function(qr, tau, y) {
+    .Call(`_fastQR_qr_Qy`, qr, tau, y)
+}
+
+#' Compute least-squares coefficients from a QR decomposition
+#'
+#' Computes the coefficient vector \eqn{\widehat\beta} solving the
+#' least-squares problem \eqn{\min_\beta \|y - X\beta\|_2},
+#' using a QR decomposition stored in compact (Householder) form.
+#'
+#' @param qr numeric matrix containing the QR decomposition of \eqn{X}
+#'   in compact form (as returned by \code{qr_fast()}).
+#' @param tau numeric vector of Householder coefficients.
+#' @param y numeric response vector of length \eqn{n}.
+#' @param pivot optional integer vector of length \eqn{p} containing the
+#'   1-based column permutation used during the QR factorization. If supplied,
+#'   the returned coefficients are reordered to match the original column order.
+#' @param rank optional integer specifying the numerical rank of \eqn{X}. If
+#'   supplied, only the leading \code{rank} components are used in the
+#'   triangular solve.
+#'
+#' @return a numeric vector of regression coefficients.
+#'
+#' @details
+#' The coefficients are obtained by first computing \eqn{Q^\top y}
+#' and then solving the resulting upper-triangular system involving
+#' the matrix \eqn{R}. The orthogonal matrix \eqn{Q} is never formed
+#' explicitly.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' qr_res <- fastQR::qr_fast(X)
+#' coef1  <- fastQR::qr_coef(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+#'
+#' ## reference computation
+#' coef2 <- base::qr.coef(base::qr(X), y)
+#'
+#' max(abs(coef1 - coef2))
+#'
+qr_coef <- function(qr, tau, y, pivot = NULL, rank = NULL) {
+    .Call(`_fastQR_qr_coef`, qr, tau, y, pivot, rank)
+}
+
+#' Compute fitted values from a QR decomposition
+#'
+#' Computes the fitted values \eqn{\widehat y = X\widehat\beta} for a linear
+#' least-squares problem using a QR decomposition stored in compact
+#' (Householder) form.
+#'
+#' @param qr Numeric matrix containing the QR decomposition of \eqn{X}
+#'   in compact form (as returned by \code{qr_fast()}).
+#' @param tau numeric vector of Householder coefficients.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector of fitted values \eqn{\hat y}.
+#'
+#' @details
+#' The fitted values are computed as
+#' \deqn{\widehat y = Q Q^\top y}
+#' without explicitly forming the orthogonal matrix \eqn{Q}. The
+#' computation relies on the Householder reflectors stored in
+#' \code{qr} and \code{tau}.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' qr_res <- fastQR::qr_fast(X)
+#' yhat1  <- fastQR::qr_fitted(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+#'
+#' ## reference computation
+#' yhat2 <- base::qr.fitted(base::qr(X), y)
+#'
+#' max(abs(yhat1 - yhat2))
+#'
+qr_fitted <- function(qr, tau, y) {
+    .Call(`_fastQR_qr_fitted`, qr, tau, y)
+}
+
+#' Compute residuals from a QR decomposition
+#'
+#' Computes the residual vector \eqn{r = y - \widehat y} for a linear
+#' least-squares problem using a QR decomposition stored in compact
+#' (Householder) form.
+#'
+#' @param qr numeric matrix containing the QR decomposition of \eqn{X}
+#'   in compact form (as returned by \code{qr_fast()}).
+#' @param tau numeric vector of Householder coefficients.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector of residuals of dimension \eqn{n}.
+#'
+#' @details
+#' The residuals are computed as
+#' \deqn{r = y - Q Q^\top y}
+#' without explicitly forming the orthogonal matrix \eqn{Q}. The
+#' computation relies on the Householder reflectors stored in
+#' \code{qr} and \code{tau}.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' qr_res <- fastQR::qr_fast(X)
+#' r1     <- fastQR::qr_resid(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+#'
+#' ## reference computation
+#' r2 <- base::qr.resid(base::qr(X), y)
+#'
+#' max(abs(r1 - r2))
+#'
+qr_resid <- function(qr, tau, y) {
+    .Call(`_fastQR_qr_resid`, qr, tau, y)
+}
+
+#' Compute least-squares coefficients using QR decomposition
+#'
+#' Computes the coefficient vector \eqn{\hat\beta} solving the
+#' least-squares problem \eqn{\min_\beta \|y - X\beta\|_2},
+#' using a QR decomposition computed internally.
+#'
+#' @param X numeric matrix of dimension \eqn{n \times p}.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector of regression coefficients.
+#'
+#' @details
+#' The QR decomposition of \eqn{X} is computed internally. The coefficients
+#' are obtained by first computing \eqn{Q^\top y} and then solving the
+#' resulting upper-triangular system involving the matrix \eqn{R}.
+#' The orthogonal matrix \eqn{Q} is never formed explicitly.
+#'
+#' This function is intended as a convenience wrapper for least-squares
+#' estimation when the explicit QR factors are not required.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' coef1 <- fastQR::qr_lse_coef(X, y)
+#'
+#' ## reference computation
+#' coef2 <- base::qr.coef(base::qr(X), y)
+#'
+#' max(abs(coef1 - coef2))
+#'
+qr_lse_coef <- function(X, y) {
+    .Call(`_fastQR_qr_lse_coef`, X, y)
+}
+
+#' Compute fitted values using QR decomposition
+#'
+#' Computes the fitted values \eqn{\hat y = X\hat\beta} for a linear
+#' least-squares problem using a QR decomposition computed internally.
+#'
+#' @param X numeric matrix of dimension \eqn{n \times p}.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector of fitted values \eqn{\hat y}.
+#'
+#' @details
+#' The QR decomposition of \eqn{X} is computed internally. The fitted
+#' values are obtained as
+#' \deqn{\widehat y = Q Q^\top y}
+#' without explicitly forming the orthogonal matrix \eqn{Q}.
+#'
+#' This function is intended as a convenience wrapper for least-squares
+#' computations when the explicit QR factors are not required.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' yhat1 <- fastQR::qr_lse_fitted(X, y)
+#'
+#' ## reference computation
+#' yhat2 <- base::qr.fitted(base::qr(X), y)
+#'
+#' max(abs(yhat1 - yhat2))
+#'
+qr_lse_fitted <- function(X, y) {
+    .Call(`_fastQR_qr_lse_fitted`, X, y)
+}
+
+#' Compute residuals using QR decomposition
+#'
+#' Computes the residual vector \eqn{r = y - \hat y} for a linear
+#' least-squares problem using a QR decomposition computed internally.
+#'
+#' @param X numeric matrix of dimension \eqn{n \times p}.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector of residuals.
+#'
+#' @details
+#' The QR decomposition of \eqn{X} is computed internally. The residuals
+#' are obtained as
+#' \deqn{r = y - Q Q^\top y}
+#' without explicitly forming the orthogonal matrix \eqn{Q}.
+#'
+#' This function is intended as a convenience wrapper for least-squares
+#' computations when the explicit QR factors are not required.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' r1 <- fastQR::qr_lse_resid(X, y)
+#'
+#' ## reference computation
+#' r2 <- base::qr.resid(base::qr(X), y)
+#'
+#' max(abs(r1 - r2))
+#'
+qr_lse_resid <- function(X, y) {
+    .Call(`_fastQR_qr_lse_resid`, X, y)
+}
+
+#' Compute Q'y for a least-squares problem
+#'
+#' Computes the product \eqn{Q^\top y}, where \eqn{Q} is the orthogonal
+#' matrix from the QR decomposition of the design matrix \eqn{X}.
+#'
+#' @param X numeric matrix of dimension \eqn{n \times p}.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector equal to \eqn{Q^\top y}.
+#'
+#' @details
+#' The QR decomposition of \eqn{X} is computed internally, and the
+#' orthogonal matrix \eqn{Q} is never formed explicitly. The product
+#' \eqn{Q^\top y} is evaluated efficiently using Householder reflectors.
+#'
+#' This function is intended as a convenience wrapper for least-squares
+#' computations when the explicit QR factors are not required.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' res1 <- fastQR::qr_lse_Qty(X, y)
+#'
+#' ## reference computation
+#' res2 <- crossprod(base::qr.Q(base::qr(X), complete = TRUE), y)
+#'
+#' max(abs(res1 - drop(res2)))
+#'
+qr_lse_Qty <- function(X, y) {
+    .Call(`_fastQR_qr_lse_Qty`, X, y)
+}
+
+#' Compute Qy for a least-squares problem
+#'
+#' Computes the product \eqn{Q y}, where \eqn{Q} is the orthogonal
+#' matrix from the QR decomposition of the design matrix \eqn{X}.
+#'
+#' @param X numeric matrix of dimension \eqn{n \times p}.
+#' @param y numeric response vector of length \eqn{n}.
+#'
+#' @return a numeric vector equal to \eqn{Q y}.
+#'
+#' @details
+#' The QR decomposition of \eqn{X} is computed internally, and the
+#' orthogonal matrix \eqn{Q} is never formed explicitly. The product
+#' \eqn{Q y} is evaluated efficiently using Householder reflectors.
+#'
+#' This function is intended as a convenience wrapper for least-squares
+#' computations when the explicit QR factors are not required.
+#'
+#' @examples
+#' set.seed(1)
+#' n <- 10; p <- 4
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rnorm(n)
+#'
+#' res1 <- fastQR::qr_lse_Qy(X, y)
+#'
+#' ## reference computation
+#' res2 <- base::qr.Q(base::qr(X), complete = TRUE) %*% y
+#'
+#' max(abs(res1 - drop(res2)))
+#'
+qr_lse_Qy <- function(X, y) {
+    .Call(`_fastQR_qr_lse_Qy`, X, y)
+}
+
 #' @name qr
 #' @title The QR factorization of a matrix
 #' @description qr provides the QR factorization of the matrix \eqn{X\in\mathbb{R}^{n\times p}} with \eqn{n>p}. The QR factorization of the matrix \eqn{X} returns the matrices \eqn{Q\in\mathbb{R}^{n\times n}} and \eqn{R\in\mathbb{R}^{n\times p}} such that \eqn{X=QR}. See Golub and Van Loan (2013) for further details on the method.
@@ -728,9 +1098,533 @@ qrdowndate <- function(Q, R, k, m = NULL, type = NULL, fast = NULL, complete = N
     .Call(`_fastQR_qrdowndate`, Q, R, k, m, type, fast, complete)
 }
 
+qraddcol <- function(Q, R, k, u) {
+    .Call(`_fastQR_qraddcol`, Q, R, k, u)
+}
+
+qraddmcols <- function(Q, R, k, U) {
+    .Call(`_fastQR_qraddmcols`, Q, R, k, U)
+}
+
+qraddrow <- function(Q, R, k, u) {
+    .Call(`_fastQR_qraddrow`, Q, R, k, u)
+}
+
+qraddmrows <- function(Q, R, k, U) {
+    .Call(`_fastQR_qraddmrows`, Q, R, k, U)
+}
+
+qrdeleterow <- function(Q, R, k) {
+    .Call(`_fastQR_qrdeleterow`, Q, R, k)
+}
+
+qrdeletemrows <- function(Q, R, k, m) {
+    .Call(`_fastQR_qrdeletemrows`, Q, R, k, m)
+}
+
+qrdeletecol <- function(Q, R, k) {
+    .Call(`_fastQR_qrdeletecol`, Q, R, k)
+}
+
+qrdeletemcols_adj <- function(Q, R, k, m) {
+    .Call(`_fastQR_qrdeletemcols_adj`, Q, R, k, m)
+}
+
+#' @name qr_thin
+#' @title Fast thin QR decomposition
+#' @description qr_thin provides the thin QR factorization of the matrix \eqn{X\in\mathbb{R}^{n\times p}} with \eqn{n>p}. The thin QR factorization of the matrix \eqn{X} returns the matrices \eqn{Q\in\mathbb{R}^{n\times p}} and the upper triangular matrix \eqn{R\in\mathbb{R}^{p\times p}} such that \eqn{X=QR}. See Golub and Van Loan (2013) for further details on the method.
+#' @param X a \eqn{n\times p} matrix with \eqn{n>p}.
+#' @return A named list containing \describe{
+#' \item{Q}{the Q matrix.}
+#' \item{R}{the R matrix.}
+#' }
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the thin QR factorization
+#' output <- qr_thin(X = X)
+#' Q      <- output$Q
+#' R      <- output$R
+#'
+#' ## check
+#' max(abs(Q %*% R - X))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_thin <- function(X) {
+    .Call(`_fastQR_qr_thin`, X)
+}
+
+#' @name qr_fast
+#' @title Fast full QR decomposition
+#' @description qr_fast provides the fast QR factorization of the matrix \eqn{X\in\mathbb{R}^{n\times p}} with \eqn{n>p}. The full QR factorization of the matrix \eqn{X} returns the matrices \eqn{Q\in\mathbb{R}^{n\times p}} and the upper triangular matrix \eqn{R\in\mathbb{R}^{p\times p}} such that \eqn{X=QR}. See Golub and Van Loan (2013) for further details on the method.
+#' @param X a \eqn{n\times p} matrix with \eqn{n>p}.
+#' @param tol the tolerance for detecting linear dependencies in the columns of \eqn{X}.
+#' @param pivot a logical value indicating whether to pivot the columns of \eqn{X}. Defaults to FALSE, meaning no pivoting is performed.
+#' @return A named list containing \describe{
+#' \item{qr}{a matrix with the same dimensions as \eqn{X}. The upper triangle contains the \eqn{R} of the decomposition and the lower triangle contains information on the \eqn{Q} of the decomposition (stored in compact form).}
+#' \item{qraux}{a vector of length ncol(x) which contains additional information on \eqn{Q}.}
+#' \item{rank}{the rank of \eqn{X} as computed by the decomposition.}
+#' \item{pivot}{information on the pivoting strategy used during the decomposition.}
+#' \item{pivoted}{a boolean variable returning one if the pivoting has been performed and zero otherwise.}
+#' }
+#' @details The QR decomposition plays an important role in many statistical techniques. In particular it can be used to solve the equation \eqn{Ax=b} for given matrix \eqn{A\in\mathbb{R}^{n\times p}} and vectors \eqn{x\in\mathbb{R}^{p}} and \eqn{b\in\mathbb{R}^{n}}. It is useful for computing regression coefficients and in applying the Newton-Raphson algorithm.
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## reconstruct the reduced Q and R matrices
+#' ## reduced Q matrix
+#' Q1 <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux,
+#'            rank = qr_res$rank, complete = FALSE)
+#' Q1
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q1)-diag(1, p)))
+#'
+#' ## complete Q matrix
+#' Q2 <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux,
+#'            rank = NULL, complete = TRUE)
+#' Q2
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q2)-diag(1, n)))
+#'
+#' ## reduced R matrix
+#' R1 <- qr_R(qr = qr_res$qr,
+#'            rank = NULL,
+#'            complete = FALSE)
+#'
+#' ## check that X^TX = R^TR
+#' ## get the permutation matrix
+#' P <- qr_pivot2perm(pivot = qr_res$pivot)
+#' max(abs(crossprod(R1 %*% P) - crossprod(X)))
+#' max(abs(crossprod(R1) - crossprod(X %*% t(P))))
+#'
+#' ## complete R matrix
+#' R2 <- qr_R(qr = qr_res$qr,
+#'            rank = NULL,
+#'            complete = TRUE)
+#'
+#' ## check that X^TX = R^TR
+#' ## get the permutation matrix
+#' P <- qr_pivot2perm(pivot = qr_res$pivot)
+#' max(abs(crossprod(R2 %*% P) - crossprod(X)))
+#' max(abs(crossprod(R2) - crossprod(X %*% t(P))))
+#'
+#' ## check that X = Q %*% R
+#' max(abs(Q2 %*% R2 %*% P - X))
+#' max(abs(Q1 %*% R1 %*% P - X))
+#'
+#' ## create data: n > p
+#' set.seed(1234)
+#' n <- 120
+#' p <- 75
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X, pivot = FALSE)
+#'
+#' ## reconstruct the reduced Q and R matrices
+#' ## reduced Q matrix
+#' Q1 <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux,
+#'            rank = p,
+#'            complete = FALSE)
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q1)-diag(1, p)))
+#'
+#' ## complete Q matrix
+#' Q2 <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux,
+#'            rank = NULL, complete = TRUE)
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q2)-diag(1, n)))
+#'
+#' ## reduced R matrix
+#' R1 <- qr_R(qr = qr_res$qr,
+#'            rank = NULL,
+#'            complete = FALSE)
+#'
+#'
+#' ## check that X^TX = R^TR
+#' max(abs(crossprod(R1) - crossprod(X)))
+#'
+#' ## complete R matrix
+#' R2 <- qr_R(qr = qr_res$qr,
+#'            rank = NULL,
+#'            complete = TRUE)
+#'
+#' ## check that X^TX = R^TR
+#' max(abs(crossprod(R2) - crossprod(X)))
+#'
+#' ## check that X^TX = R^TR
+#' max(abs(crossprod(R2) - crossprod(X)))
+#' max(abs(crossprod(R2) - crossprod(X)))
+#' max(abs(crossprod(R1) - crossprod(X)))
+#'
+#' # check that X = Q %*% R
+#' max(abs(Q2 %*% R2 - X))
+#' max(abs(Q1 %*% R1 - X))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_fast <- function(X, tol = NULL, pivot = NULL) {
+    .Call(`_fastQR_qr_fast`, X, tol, pivot)
+}
+
+#' @name qr_Q
+#' @title Reconstruct the Q, matrix from a QR object.
+#' @description returns the \eqn{Q} matrix of the full QR decomposition. If \eqn{r = \mathrm{rank}(X) < p}, then only the reduced \eqn{Q \in \mathbb{R}^{n \times r}} matrix is returned.
+#' @param qr object representing a QR decomposition. This will typically have come from a previous call to qr.
+#' @param tau a vector of length \eqn{ncol(X)} which contains additional information on \eqn{Q}. It corresponds to qraux from a previous call to qr.
+#' @param rank the rank of x as computed by the decomposition.
+#' @param complete logical flag (length 1). Indicates whether to compute the full \eqn{Q \in \bold{R}^{n \times n}} or the thin \eqn{Q \in \bold{R}^{n \times p}}. If \eqn{r = \mathrm{rank}(X) < p}, then only the reduced \eqn{Q \in \mathbb{R}^{n \times r}} matrix is returned.
+#' @return returns part or all of \eqn{Q}, the order-\eqn{n} orthogonal (unitary) transformation represented by qr. If complete is TRUE, \eqn{Q} has \eqn{n} columns. If complete is FALSE, \eqn{Q} has \eqn{p} columns.
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## get the full Q matrix
+#' Q1 <- qr_Q(qr_res$qr, qr_res$qraux, complete = TRUE)
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q1)-diag(1, n)))
+#'
+#' ## get the reduced Q matrix
+#' Q2 <- qr_Q(qr_res$qr, qr_res$qraux, qr_res$rank, complete = FALSE)
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q2)-diag(1, p)))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_Q <- function(qr, tau, rank = NULL, complete = NULL) {
+    .Call(`_fastQR_qr_Q`, qr, tau, rank, complete)
+}
+
+#' @name qr_R
+#' @title Reconstruct the R, matrix from a QR object.
+#' @description returns the \eqn{R} matrix of the full QR decomposition. If \eqn{r = \mathrm{rank}(X) < p}, then only the reduced \eqn{R \in \mathbb{R}^{r \times p}} matrix is returned.
+#' @param qr object representing a QR decomposition. This will typically have come from a previous call to qr.
+#' @param rank the rank of x as computed by the decomposition.
+#' @param pivot a logical value indicating whether to pivot the columns of \eqn{X}. Defaults to FALSE, meaning no pivoting is performed.
+#' @param complete logical flag (length 1). Indicates whether the \eqn{R} matrix is to be completed by binding zero-value rows beneath the square upper triangle. If \eqn{r = \mathrm{rank}(X) < p}, then only the reduced \eqn{R \in \mathbb{R}^{r \times p}} matrix is returned.
+#' @param pivot a vector of length \eqn{p}, specifying the permutation of the columns of \eqn{X} applied during the QR decomposition process. The default is NULL if no pivoting has been applied.
+#' @return returns part or all of \eqn{R}. If complete is TRUE, \eqn{R} has \eqn{n} rows. If complete is FALSE, \eqn{R} has \eqn{p} rows.
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## get the full R matrix
+#' R1 <- qr_R(qr_res$qr, complete = TRUE)
+#'
+#' ## check that X^TX = R^TR
+#' ## get the permutation matrix
+#' P <- qr_pivot2perm(pivot = qr_res$pivot)
+#' max(abs(crossprod(R1 %*% P) - crossprod(X)))
+#' max(abs(crossprod(R1) - crossprod(X %*% t(P))))
+#'
+#' ## get the reduced R matrix
+#' R2 <- qr_R(qr_res$qr, qr_res$rank, complete = FALSE)
+#'
+#' ## check that X^TX = R^TR
+#' ## get the permutation matrix
+#' P <- qr_pivot2perm(pivot = qr_res$pivot)
+#' max(abs(crossprod(R2 %*% P) - crossprod(X)))
+#' max(abs(crossprod(R2) - crossprod(X %*% t(P))))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_R <- function(qr, rank = NULL, pivot = NULL, complete = NULL) {
+    .Call(`_fastQR_qr_R`, qr, rank, pivot, complete)
+}
+
+#' @name qr_pivot2perm
+#' @title Reconstruct the permutation matrix from the pivot vector.
+#' @description returns the permutation matrix for the QR decomposition.
+#' @param pivot a vector of dimension \eqn{n} of pivot elements from the QR factorization.
+#' @return the perumutation matrix \eqn{P} of dimension \eqn{n \times n}.
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## get the pivot matrix
+#' P <- qr_pivot2perm(qr_res$pivot)
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_pivot2perm <- function(pivot) {
+    .Call(`_fastQR_qr_pivot2perm`, pivot)
+}
+
+#' @name qr_X
+#' @title Reconstruct the original matrix from which the object was constructed \eqn{X\in\mathbb{R}^{n\times p}} from the Q and R matrices of the QR decomposition.
+#' @description returns the \eqn{X\in\mathbb{R}^{n\times p}} matrix.
+#' @param Q either the reduced \eqn{Q\in\mathbb{R}^{n\times p}} of full \eqn{Q\in\mathbb{R}^{n\times n}}, Q matrix obtained from the QR decomposition.
+#' @param R either the reduced \eqn{R\in\mathbb{R}^{p\times p}} of full \eqn{R\in\mathbb{R}^{n\times p}}, R matrix obtained from the QR decomposition.
+#' @param pivot a vector of length \eqn{p}, specifying the permutation of the columns of \eqn{X} applied during the QR decomposition process. The default is NULL if no pivoting has been applied.
+#' @return returns the matrix \eqn{X}.
+#'
+#' @examples
+#' ## generate sample data
+#' set.seed(1234)
+#' n <- 12
+#' p <- 5
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X, pivot = TRUE)
+#'
+#' ## get the Q and R matrices
+#' Q  <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux, rank = qr_res$rank, complete = TRUE)
+#' R  <- qr_R(qr = qr_res$qr, rank = qr_res$rank, complete = TRUE)
+#' X1 <- qr_X(Q = Q, R = R, pivot = qr_res$pivot)
+#' max(abs(X1 - X))
+#'
+#' ## get the full QR decomposition without pivot
+#' qr_res <- fastQR::qr_fast(X = X, pivot = FALSE)
+#'
+#' ## get the Q and R matrices
+#' Q  <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux, rank = p, complete = FALSE)
+#' R  <- qr_R(qr = qr_res$qr, rank = NULL, complete = FALSE)
+#' X1 <- qr_X(Q = Q, R = R, pivot = NULL)
+#' max(abs(X1 - X))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_X <- function(Q, R, pivot = NULL) {
+    .Call(`_fastQR_qr_X`, Q, R, pivot)
+}
+
+#' @name qr_Q_full
+#' @title Reconstruct the full Q matrix from the qr object.
+#' @description returns the full \eqn{Q\in\mathbb{R}^{n\times n}} matrix.
+#' @param qr object representing a QR decomposition. This will typically have come from a previous call to qr.
+#' @param tau a vector of length \eqn{ncol(X)} which contains additional information on \eqn{Q}. It corresponds to qraux from a previous call to qr.
+#' @return returns the matrix \eqn{Q\in\mathbb{R}^{n\times n}}.
+#'
+#' @examples
+#' ## create data: n > p
+#' set.seed(1234)
+#' n <- 12
+#' p <- 7
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## complete the reduced Q matrix
+#' Q <- fastQR::qr_Q_full(qr  = qr_res$qr,
+#'                        tau = qr_res$qraux)
+#'
+#' ## check the Q matrix (orthogonality)
+#' max(abs(crossprod(Q)-diag(1, n)))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_Q_full <- function(qr, tau) {
+    .Call(`_fastQR_qr_Q_full`, qr, tau)
+}
+
+#' @name qr_Q_reduced2full
+#' @title Reconstruct the full Q matrix from the reduced Q matrix.
+#' @description returns the full \eqn{Q\in\mathbb{R}^{n\times n}} matrix.
+#' @param Q a \eqn{n\times p} reduced Q matrix from the QR decomposition (with \eqn{n>p}).
+#' @return a \eqn{n\times n} orthogonal matrix \eqn{Q}.
+#'
+#' @examples
+#' ## create data: n > p
+#' set.seed(1234)
+#' n <- 12
+#' p <- 7
+#' X <- matrix(rnorm(n * p), n, p)
+#'
+#' ## get the full QR decomposition with pivot
+#' qr_res <- fastQR::qr_fast(X = X,
+#'                           tol = sqrt(.Machine$double.eps),
+#'                           pivot = TRUE)
+#'
+#' ## reconstruct the reduced Q matrix
+#' Q1 <- qr_Q(qr = qr_res$qr, tau = qr_res$qraux,
+#'            rank = qr_res$rank, complete = FALSE)
+#'
+#' ## complete the reduced Q matrix
+#' Q2 <- fastQR::qr_Q_reduced2full(Q = Q1)
+#' R  <- fastQR::qr_R(qr = qr_res$qr, rank = NULL, complete = TRUE)
+#'
+#' X1 <- qr_X(Q = Q2, R = R, pivot = qr_res$pivot)
+#' max(abs(X - X1))
+#'
+#' @references
+#' \insertRef{golub_van_loan.2013}{fastQR}
+#'
+#' \insertRef{bjorck.2015}{fastQR}
+#'
+#' \insertRef{bjorck.2024}{fastQR}
+#'
+#' \insertRef{bernardi_etal.2024}{fastQR}
+#'
+qr_Q_reduced2full <- function(Q) {
+    .Call(`_fastQR_qr_Q_reduced2full`, Q)
+}
+
+#' @name qr_lm
+#' @title Ordinary least squares for the linear regression model
+#' @description qr_lm, or LS for linear regression models, solves the following optimization problem
+#' \deqn{\textrm{min}_\beta ~ \frac{1}{2}\|y-X\beta\|_2^2,}
+#' for \eqn{y\in\mathbb{R}^n} and \eqn{X\in\mathbb{R}^{n\times p}} witn \eqn{n>p}, to obtain a coefficient vector \eqn{\widehat{\beta}\in\mathbb{R}^p}. The design matrix \eqn{X\in\mathbb{R}^{n\times p}}
+#' contains the observations for each regressor.
+#' @param y a vector of length-\eqn{n} response vector.
+#' @param X an \eqn{(n\times p)} full column rank matrix of predictors.
+#' @param X_test an \eqn{(q\times p)} full column rank matrix. Test set. By default it set to NULL.
+#' @return A named list containing \describe{
+#' \item{coeff}{a length-\eqn{p} vector containing the solution for the parameters \eqn{\beta}.}
+#' \item{coeff.se}{a length-\eqn{p} vector containing the standard errors for the estimated regression parameters \eqn{\beta}.}
+#' \item{fitted}{a length-\eqn{n} vector of fitted values, \eqn{\widehat{y}=X\widehat{\beta}}.}
+#' \item{residuals}{a length-\eqn{n} vector of residuals, \eqn{\varepsilon=y-\widehat{y}}.}
+#' \item{residuals_norm2}{the squared L2-norm of the residuals, \eqn{\Vert\varepsilon\Vert_2^2.}}
+#' \item{y_norm2}{the squared L2-norm of the response variable, \eqn{\Vert y\Vert_2^2.}}
+#' \item{R}{the \eqn{R\in\mathbb{R}^{p\times p}} upper triangular matrix of the QR decomposition.}
+#' \item{L}{the inverse of the \eqn{R\in\mathbb{R}^{p\times p}} upper triangular matrix of the QR decomposition \eqn{L = R^{-1}}.}
+#' \item{XTX}{the Gram matrix \eqn{X^\top X\in\mathbb{R}^{p\times p}} of the least squares problem.}
+#' \item{XTX_INV}{the inverse of the Gram matrix \eqn{X^\top X\in\mathbb{R}^{p\times p}} of the least squares problem \eqn{(X^\top X)^{-1}}.}
+#' \item{XTy}{A vector equal to \eqn{X^\top y}, the cross-product of the design matrix \eqn{X} with the response vector \eqn{y}.}
+#' \item{sigma2_hat}{An estimate of the error variance \eqn{\sigma^2}, computed as the residual sum of squares divided by the residual degrees of freedom \eqn{\widehat{\sigma}^2 = \frac{\|y - X\hat{\beta}\|_2^2}{df}}}
+#' \item{df}{The residual degrees of freedom, given by \eqn{n - p}, where \eqn{n} is the number of observations and \eqn{p} is the number of estimated parameters.}
+#' \item{R2}{\eqn{R^2}, coefficient of determination, measure of goodness-of-fit of the model.}
+#' \item{predicted}{predicted values for the test set, \eqn{X_{\text{test}}\widehat{\beta}}. It is only available if X_test is not NULL.}
+#' }
+#' @examples
+#'
+#' ## generate sample data
+#' ## create data: n > p
+#' set.seed(1234)
+#' n    <- 12
+#' n0   <- 3
+#' p    <- 7
+#' X    <- matrix(rnorm(n * p), n, p)
+#' b    <- rep(1, p)
+#' sig2 <- 0.25
+#' y    <- X %*% b + sqrt(sig2) * rnorm(n)
+#' summary(lm(y~X))
+#'
+#' ## test
+#' X_test <- matrix(rnorm(n0 * p), n0, p)
+#'
+#' ## lm
+#' qr_lm(y = y, X = X, X_test = X_test)
+#' qr_lm(y = y, X = X)
+#'
+qr_lm <- function(y, X, X_test = NULL) {
+    .Call(`_fastQR_qr_lm`, y, X, X_test)
+}
+
+qr_lm_pred <- function(y, X, X_test) {
+    .Call(`_fastQR_qr_lm_pred`, y, X, X_test)
+}
+
 #' @name rupdate
 #' @title Fast updating of the R matrix
 #' @description updates the R factorization when \eqn{m \geq 1} rows or columns are added to the matrix \eqn{X \in \mathbb{R}^{n \times p}}, where \eqn{n > p}. The R factorization of \eqn{X} produces an upper triangular matrix \eqn{R \in \mathbb{R}^{p \times p}} such that \eqn{X^\top X = R^\top R}. For more details on this method, refer to Golub and Van Loan (2013). Columns can only be added in positions \eqn{p+1} through \eqn{p+m}, while the position of added rows does not need to be specified.
+#' @param X the current \eqn{n\times p} matrix, prior to the addition of any rows or columns.
 #' @param R a \eqn{p\times p} upper triangular matrix.
 #' @param U either a \eqn{n\times m} matrix or a \eqn{p\times m} matrix of columns or rows to be added.
 #' @param type either 'row' of 'column', for adding rows or columns.
@@ -868,7 +1762,7 @@ rupdate <- function(X, R, U, fast = NULL, type = NULL) {
 #' @description rdowndate provides the update of the thin R matrix of the QR factorization after the deletion of \eqn{m\geq 1} rows or columns to the matrix \eqn{X\in\mathbb{R}^{n\times p}} with \eqn{n>p}. The R factorization of the matrix \eqn{X} returns the upper triangular matrix \eqn{R\in\mathbb{R}^{p\times p}} such that \eqn{X^\top X=R^\top R}. See Golub and Van Loan (2013) for further details on the method.
 #' @param R a \eqn{p\times p} upper triangular matrix.
 #' @param k position where the columns or the rows are removed.
-#' @param m number of columns or rows to be removed.
+#' @param m number of columns or rows to be removed. It is not required when deleting columns. If NULL, it defaults to the number of columns in \eqn{U}.
 #' @param U a \eqn{p\times m} matrix of rows to be removed. It should only be provided when rows are being removed.
 #' @param type either 'row' of 'column', for removing rows or columns.
 #' @param fast fast mode: disable to check whether the provided matrices are valid inputs. Default is FALSE.
@@ -995,5 +1889,17 @@ rdowndate <- function(R, k = NULL, m = NULL, U = NULL, fast = NULL, type = NULL)
 
 set_diff <- function(x, y) {
     .Call(`_fastQR_set_diff`, x, y)
+}
+
+mat_slicing_byrow <- function(X, index) {
+    .Call(`_fastQR_mat_slicing_byrow`, X, index)
+}
+
+mat_slicing_byrow2 <- function(X, index) {
+    .Call(`_fastQR_mat_slicing_byrow2`, X, index)
+}
+
+mat_slicing_byrow3 <- function(X, index) {
+    .Call(`_fastQR_mat_slicing_byrow3`, X, index)
 }
 

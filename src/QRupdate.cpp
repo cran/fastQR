@@ -32,6 +32,7 @@ The following functions are for adding rows or columns
 // input R p x p
 // k position of the column to be added
 // u n-dim column to be added
+// [[Rcpp::export]]
 Rcpp::List qraddcol (const Eigen::MatrixXd& Q,
                      const Eigen::MatrixXd& R,
                      const int& k,
@@ -91,6 +92,7 @@ Rcpp::List qraddcol (const Eigen::MatrixXd& Q,
 // input R
 // k position of the column to be added
 // U n x m block to be added
+// [[Rcpp::export]]
 Rcpp::List qraddmcols (const Eigen::MatrixXd& Q,
                        const Eigen::MatrixXd& R,
                        const int& k, const
@@ -159,6 +161,7 @@ Rcpp::List qraddmcols (const Eigen::MatrixXd& Q,
 // input R n x p
 // k position of the row to be added
 // U p-dim row to be added (matrix)
+// [[Rcpp::export]]
 Rcpp::List qraddrow (const Eigen::MatrixXd& Q,
                      const Eigen::MatrixXd& R,
                      const int& k,
@@ -194,7 +197,7 @@ Rcpp::List qraddrow (const Eigen::MatrixXd& Q,
     ss    = tmp_g(1);
     
     // update R 
-    Rs(i, i) = cc * Rs(i, i) - ss * us(0, i);
+    Rs(i, i) = cc * Rs(i, i) - ss * us(i);
     if (i+1 < p) {
       tmp.resize(p-i-1);
       tmp                        = Rs.block(i, i+1, 1, p-i-1);
@@ -223,6 +226,7 @@ Rcpp::List qraddrow (const Eigen::MatrixXd& Q,
 // input R n x p
 // k position of the rows to be added
 // U m x p rows to be added (matrix)
+// [[Rcpp::export]]
 Rcpp::List qraddmrows (const Eigen::MatrixXd& Q,
                        const Eigen::MatrixXd& R,
                        const int& k,
@@ -306,6 +310,7 @@ The following functions are for removing rows or columns
 // input Q n x n
 // input R n x p
 // k position of the row to be deleted
+// [[Rcpp::export]]
 Rcpp::List qrdeleterow (const Eigen::MatrixXd& Q,
                         const Eigen::MatrixXd& R,
                         const int& k) {
@@ -323,33 +328,167 @@ Rcpp::List qrdeleterow (const Eigen::MatrixXd& Q,
   // define the vector q to remove from Q
   Eigen::RowVectorXd q = Q.row(k-1);
   
-  // permute Q 
-  if (k-1 != 0) 
+  // permute Q
+  if (k-1 != 0) {
     Qs.block(1, 0, k-1, Qs.cols()) = Qs.block(0, 0, k-1, Qs.cols()).eval();
-  
+  }
+    
   // :::::::::::::::::::::::::::::::::::::::::::::::
   // update R and Q
   for (i = n-1; i > 0 ; i--) {
-    // Givens rotation 
+    // Givens rotation
     tmp = givens(q(i-1), q(i));
     cc  = tmp(0);
     ss  = tmp(1);
     Givens << cc, ss, -ss, cc;
     
+    // update q
+    q(i-1) = cc * q(i-1) - ss * q(i);
+    
+    // update R
+    if (i-1 < p) {
+      Rs.block(i-1, i-1, 2, p-i+1) = Givens.transpose() * Rs.block(i-1, i-1, 2, p-i+1);
+    }
+    
+    // update Q
+    if (i-1 > 0) {
+      Qs.block(1, i-1, n-1, 2) = Qs.block(1, i-1, n-1, 2) * Givens;
+    }
+  }
+  
+  // update second last column of Q
+  // no need to update last column
+  Qs.block(1, 1, n-1, 1) = ss * Qs.block(1, 0, n-1, 1) + cc * Qs.block(1, 1, n-1, 1);
+  
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // output
+  return Rcpp::List::create(Rcpp::Named("Q") = Qs.bottomRightCorner(n-1, n-1),
+                            Rcpp::Named("R") = Rs.bottomRightCorner(p, p));
+}
+
+Rcpp::List qrdeleterow_checks (const Eigen::MatrixXd& Q,
+                        const Eigen::MatrixXd& R,
+                        const int& k) {
+  
+  //std::cout << "inizio funzione           :\n";
+  
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // initialization
+  int i = 0, n = Q.rows(), p = R.cols();
+  double cc = 0.0, ss = 0.0;
+  Eigen::Vector2d tmp; tmp.setZero();
+  Eigen::Matrix2d Givens; Givens.setZero();
+  Eigen::MatrixXd Qs = Q;
+  Eigen::MatrixXd Rs(p+1, p); Rs.setZero();
+  Rs.topRows(p) = R;
+  
+  //std::cout << "ziobillyqui 0           :\n";
+  //std::cout << "qui 0           : " << "\n";
+  
+  // define the vector q to remove from Q
+  Eigen::RowVectorXd q = Q.row(k-1);
+  
+  // permute Q 
+  if (k-1 != 0) {
+    Qs.block(1, 0, k-1, Qs.cols()) = Qs.block(0, 0, k-1, Qs.cols()).eval();
+  }
+    
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // update R and Q
+  for (i = n-1; i > 0 ; i--) {
+    // Givens rotation 
+    tmp = givens(q(i-1), q(i));
+    
+    //std::cout << "qui1 i           : " << i << "\n";
+    cc  = tmp(0);
+    
+    //std::cout << "qui2 i           : " << i << "\n";
+    ss  = tmp(1);
+    
+    //std::cout << "qui3 i           : " << i << "\n";
+    Givens << cc, ss, -ss, cc;
+    
+    //std::cout << "qui4 i           : " << i << "\n";
+    
     // update q 
     q(i-1) = cc * q(i-1) - ss * q(i);
     
+    //std::cout << "qui5 i           : " << i << "\n";
+    
     // update R 
-    if (i-1 < p)  
+    if (i-1 < p) {
       Rs.block(i-1, i-1, 2, p-i+1) = Givens.transpose() * Rs.block(i-1, i-1, 2, p-i+1);
+      //std::cout << "qui6 i           : " << i << "\n" << std::endl;
+    }
+    //std::cout << "qui7 i           : " << i << "\n";
+    
     
     // update Q 
-    if (i-1 > 0)  
+    if (i-1 > 0) {
+      Qs.block(1, i-1, n-1, 2) = Qs.block(1, i-1, n-1, 2) * Givens;
+      //std::cout << "qui8 i           : " << i << "\n";
+    }
+    //std::cout << "qui9 i           : " << i << "\n";
+  }
+  
+  //std::cout << "qui10 i           : " << i << "\n";
+  
+  // update second last column of Q
+  // no need to update last column 
+  Qs.block(1, 1, n-1, 1) = ss * Qs.block(1, 0, n-1, 1) + cc * Qs.block(1, 1, n-1, 1);
+  
+  //std::cout << "qui11 i           : " << i << "\n";
+  
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // output
+  return Rcpp::List::create(Rcpp::Named("Q") = Qs.bottomRightCorner(n-1, n-1),
+                            Rcpp::Named("R") = Rs.bottomRightCorner(p, p));
+}
+
+Rcpp::List qrdeleterow_claudio (const Eigen::MatrixXd& Q,
+                                const Eigen::MatrixXd& R,
+                                const int& k) {
+  
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // initialization
+  int i = 0, n = Q.rows(), p = R.cols();
+  double cc = 0.0, ss = 0.0;
+  Eigen::Vector2d tmp; tmp.setZero();
+  Eigen::Matrix2d Givens; Givens.setZero();
+  Eigen::MatrixXd Qs = Q;
+  Eigen::MatrixXd Rs(p+1, p); Rs.setZero();
+  Rs.topRows(p) = R;
+  
+  // define the vector q to remove from Q
+  Eigen::RowVectorXd q = Q.row(k-1);
+  
+  // permute Q
+  if (k-1 != 0)
+    Qs.block(1, 0, k-1, Qs.cols()) = Qs.block(0, 0, k-1, Qs.cols()).eval();
+  
+  // :::::::::::::::::::::::::::::::::::::::::::::::
+  // update R and Q
+  for (i = n-1; i > 0 ; i--) {
+    // Givens rotation
+    tmp = givens(q(i-1), q(i));
+    cc  = tmp(0);
+    ss  = tmp(1);
+    Givens << cc, ss, -ss, cc;
+    
+    // update q
+    q(i-1) = cc * q(i-1) - ss * q(i);
+    
+    // update R
+    if (i-1 < p)
+      Rs.block(i-1, i-1, 2, p-i+1) = Givens.transpose() * Rs.block(i-1, i-1, 2, p-i+1);
+    
+    // update Q
+    if (i-1 > 0)
       Qs.block(1, i-1, n-1, 2) = Qs.block(1, i-1, n-1, 2) * Givens;
   }
   
   // update second last column of Q
-  // no need to update last column 
+  // no need to update last column
   Qs.block(1, 1, n-1, 1) = ss * Qs.block(1, 0, n-1, 1) + cc * Qs.block(1, 1, n-1, 1);
   
   // :::::::::::::::::::::::::::::::::::::::::::::::
@@ -365,6 +504,7 @@ Rcpp::List qrdeleterow (const Eigen::MatrixXd& Q,
 // input R n x p
 // k position of the rows to be deleted
 // m number of adjacent rows to be deleted
+// [[Rcpp::export]]
 Rcpp::List qrdeletemrows (const Eigen::MatrixXd& Q,
                           const Eigen::MatrixXd& R,
                           const int& k,
@@ -420,9 +560,10 @@ Rcpp::List qrdeletemrows (const Eigen::MatrixXd& Q,
 // :::::::::::::::::::::::::::::::::::::::::::::::
 // QR update: delete one column at position k
 // function to update QR factorization of X when a column is deleted at position k
-// input Q n x n
+// input Q n x p
 // input R p x p
 // k position of the column to be deleted
+// [[Rcpp::export]]
 Rcpp::List qrdeletecol (const Eigen::MatrixXd& Q,
                         const Eigen::MatrixXd& R,
                         const int& k) {
@@ -482,10 +623,11 @@ Rcpp::List qrdeletecol (const Eigen::MatrixXd& Q,
 // :::::::::::::::::::::::::::::::::::::::::::::::
 // QR update: delete m columns at position k
 // function to update QR factorization of X when a block of m columns is deleted at position k
-// input Q n x n
+// input Q n x p
 // input R n x p
 // k position of the columns to be deleted
 // m number of adjacent columns to be deleted
+// [[Rcpp::export]]
 Rcpp::List qrdeletemcols_adj (const Eigen::MatrixXd& Q,
                               const Eigen::MatrixXd& R,
                               const int& k,

@@ -357,14 +357,21 @@ Rcpp::List qrupdate(const Eigen::MatrixXd& Q,
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    Update the QR matrix: adding one or more columns:     */
   if (type_ == "column") {
-    
+  
     // resize Q_ and R_
     Q_.resize(Q_nrow, Q_nrow);
     R_.resize(R_ncol+m, R_ncol+m);
     
-    // resize the input matrices: delete rows requires the reduced QR factorization
-    Qin = Q.block(0, 0, Qin.rows(), Qin.cols());
+    // resize the input matrices:
+    // le due righe seguenti le ho cambiate il 3 settembre 2025
+    //Qin = Q.block(0, 0, Qin.rows(), Qin.cols());
+    //Rin = R.block(0, 0, Rin.rows(), Rin.cols());
+    
+    // modifica da fare:
+    Rin.resize(R_ncol, R_ncol);
+    Rin.setZero();
     Rin = R.block(0, 0, Rin.rows(), Rin.cols());
+    Qin = Q.block(0, 0, Qin.rows(), Qin.cols());
     
     // get the dimension of the matrix U
     if (!fast_) {
@@ -374,7 +381,7 @@ Rcpp::List qrupdate(const Eigen::MatrixXd& Q,
     }
     if (m == 1) {
       // perform add one column
-      res = qraddcol(Qin, Rin, k, U);
+      res = qraddcol(Qin, Rin, k, U.col(0));
     } else {
       // perform add m columns
       res = qraddmcols(Qin, Rin, k, U);
@@ -403,12 +410,12 @@ Rcpp::List qrupdate(const Eigen::MatrixXd& Q,
    Update the QR matrix: adding one or more rows:     */
   if (type_ == "row") {
     
-    // resize Q_ and R_
+    // resize Q_ and R_: add one row returns a Q (n+1, n+1) and a R(p, p)
     Q_.resize(Q_nrow+m, Q_nrow+m);
     R_.resize(R_ncol, R_ncol);
-    
+        
     // resize the input matrices: delete rows requires the reduced QR factorization
-    Qin.resize(Q_nrow, R_ncol);
+    Qin.resize(Q_nrow, Q_nrow);             // secondo me questa non era sbagliata ma incorretta è meglio così per come gli do gli input
     Rin.resize(R_ncol, R_ncol);
     Qin = Q.block(0, 0, Qin.rows(), Qin.cols());
     Rin = R.block(0, 0, Rin.rows(), Rin.cols());
@@ -421,7 +428,9 @@ Rcpp::List qrupdate(const Eigen::MatrixXd& Q,
     }
     if (m == 1) {
       // perform add one row
-      res = qraddrow(Qin, Rin, k, U.transpose());
+      res = qraddrow(Qin, Rin, k, U.col(0).transpose());
+      Q_  = res["Q"];
+      R_  = res["R"];
     } else {
       // perform add m rows
       res = qraddmrows(Qin, Rin, k, U.transpose());
@@ -432,6 +441,7 @@ Rcpp::List qrupdate(const Eigen::MatrixXd& Q,
     R_ = res["R"];
     if (complete_) {
       Rs.resize(Q_nrow+m, R_ncol);
+      Rs.setZero();
       Rs.block(0, 0, R_ncol, R_ncol) = R_;
       output                         = Rcpp::List::create(Rcpp::Named("Q") = Q_,
                                                           Rcpp::Named("R") = Rs);
@@ -680,7 +690,7 @@ Rcpp::List qrdowndate(const Eigen::MatrixXd& Q,
   
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    vectors and matrices declaration                    */
-  Eigen::MatrixXd Qin(Q_nrow, R_ncol);          Qin.setZero();        // reduced Q matrix (input for delete rows)
+  Eigen::MatrixXd Qin(Q_nrow, Q_nrow);          Qin.setZero();        // reduced Q matrix (input for delete rows)
   Eigen::MatrixXd Rin(R_ncol, R_ncol);          Rin.setZero();        // reduced R matrix (input for delete rows)
   Eigen::MatrixXd Qs(Q_nrow, Q_nrow);           Qs.setZero();
   Eigen::MatrixXd Rs(Q_nrow, R_ncol);           Rs.setZero();
@@ -700,6 +710,7 @@ Rcpp::List qrdowndate(const Eigen::MatrixXd& Q,
     // resize the input matrices: delete rows requires the reduced QR factorization
     Qin = Q.block(0, 0, Qin.rows(), Qin.cols());
     Rin = R.block(0, 0, Rin.rows(), Rin.cols());
+  
     if (m_ == 1) {
       // perform add one column
       res = qrdeletecol(Qin, Rin, k);
@@ -713,19 +724,28 @@ Rcpp::List qrdowndate(const Eigen::MatrixXd& Q,
     R_ = res["R"];
     if (complete_) {
       Rs.resize(Q_nrow, R_ncol-m_);
-      Qs.block(0, 0, Q_nrow, Q_ncol-m_)    = Q_;
+      Rs.setZero();
+      Qs.setZero();
+      //Qs.block(0, 0, Q_nrow, Q_ncol-m_)    = Q_;                  // dovrebbe essere questa ma purtroppo la Q che restituisce qrdeletecol non è completa
+      Qs.block(0, 0, Q_nrow, R_ncol-m_)    = Q_;
       Rs.block(0, 0, R_ncol-m_, R_ncol-m_) = R_;
       output                               = Rcpp::List::create(Rcpp::Named("Q") = Qs,
                                                                 Rcpp::Named("R") = Rs);
     } else {
-      output = Rcpp::List::create(Rcpp::Named("Q") = Q_,
-                                  Rcpp::Named("R") = R_);
+      Rs.resize(R_ncol-m_, R_ncol-m_);
+      Rs.setZero();
+      Qs.resize(Q_nrow, R_ncol-m_);
+      Qs.block(0, 0, Q_nrow, R_ncol-m_)    = Q_.block(0, 0, Q_nrow, R_ncol-m_);
+      Rs.block(0, 0, R_ncol-m_, R_ncol-m_) = R_;
+      output                               = Rcpp::List::create(Rcpp::Named("Q") = Qs,
+                                                                Rcpp::Named("R") = Rs);
     }
   }
-    
+
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    Downdate the QR matrix: removing one or more rows:     */
   if (type_ == "row") {
+    
     // resize Q_ and R_
     Q_.resize(Q_nrow-m_, Q_nrow-m_);
     R_.resize(R_ncol, R_ncol);
@@ -741,6 +761,7 @@ Rcpp::List qrdowndate(const Eigen::MatrixXd& Q,
     // Output
     Q_ = res["Q"];
     R_ = res["R"];
+    
     if (complete_) {
       Qs.resize(Q_nrow-m_, Q_nrow-m_);
       Rs.resize(Q_nrow-m_, R_ncol);
@@ -765,15 +786,3 @@ Rcpp::List qrdowndate(const Eigen::MatrixXd& Q,
 
 
   
-
-  
- 
-
-
-
-
-
-
-
-
-

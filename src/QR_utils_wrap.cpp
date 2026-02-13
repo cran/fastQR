@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "QRutils.h"
 #include "QRdecomposition.h"
+#include "fastQRutils.h"
 
 #define EIGEN_USE_BLAS
 #define EIGEN_USE_LAPACKE
@@ -1192,4 +1193,484 @@ Rcpp::List qrmridge_cv(Eigen::MatrixXd& Y,
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    return output                                        */
   return output;
+}
+
+//' Multiply Q by a vector using a QR decomposition
+//'
+//' Computes \eqn{Q^\top y}, where \eqn{Q} is the orthogonal matrix from the
+//' QR decomposition stored in compact (Householder) form.
+//'
+//' @param qr numeric matrix containing the QR decomposition in compact form
+//'   (as returned by \code{qr_fast()}).
+//' @param tau numeric vector of Householder coefficients.
+//' @param y numeric vector of length \eqn{n}.
+//'
+//' @return a numeric vector equal to \eqn{Q^\top y}.
+//'
+//' @details
+//' The orthogonal matrix \eqn{Q} is not formed explicitly. The product
+//' \eqn{Q^\top y} is computed efficiently using the Householder reflectors
+//' stored in \code{qr} and \code{tau}.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' qr_res <- fastQR::qr_fast(X)
+//' res1   <- fastQR::qr_Qty(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+//'
+//' ## reference computation
+//' Q    <- base::qr.Q(base::qr(X), complete = TRUE)
+//' res2 <- crossprod(Q, y)
+//'
+//' max(abs(res1 - drop(res2)))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_Qty(const Eigen::MatrixXd& qr,
+                       const Eigen::VectorXd& tau,
+                       const Eigen::VectorXd& y) {
+    
+  /* ::::::::::::::::::::::::::::::::::::::::::::::
+   compute Q^T * y:                                    */
+  Eigen::VectorXd Qty = qr_Qty_rank(qr, tau, y);
+  
+  // return output
+  return Qty;
+}
+
+//' Multiply Q by a vector using a QR decomposition
+//'
+//' Computes \eqn{Q y}, where \eqn{Q} is the orthogonal matrix from the
+//' QR decomposition stored in compact (Householder) form.
+//'
+//' @param qr numeric matrix containing the QR decomposition in compact form
+//'   (as returned by \code{qr_fast()}).
+//' @param tau numeric vector of Householder coefficients.
+//' @param y numeric vector of length \eqn{n}.
+//'
+//' @return a numeric vector equal to \eqn{Q y}.
+//'
+//' @details
+//' The orthogonal matrix \eqn{Q} is not formed explicitly. The product
+//' \eqn{Q y} is computed efficiently using the Householder reflectors
+//' stored in \code{qr} and \code{tau}.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' qr_res <- fastQR::qr_fast(X)
+//' res1   <- fastQR::qr_Qy(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+//'
+//' ## reference computation
+//' Q    <- base::qr.Q(base::qr(X), complete = TRUE)
+//' res2 <- Q %*% y
+//'
+//' max(abs(res1 - drop(res2)))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_Qy(const Eigen::MatrixXd& qr,
+                      const Eigen::VectorXd& tau,
+                      const Eigen::VectorXd& y) {
+  
+  /* ::::::::::::::::::::::::::::::::::::::::::::::
+   compute Q * y:                                    */
+  Eigen::VectorXd Qy = qr_Qy_rank(qr, tau, y);
+  
+  // return output
+  return Qy;
+}
+
+//' Compute least-squares coefficients from a QR decomposition
+//'
+//' Computes the coefficient vector \eqn{\widehat\beta} solving the
+//' least-squares problem \eqn{\min_\beta \|y - X\beta\|_2},
+//' using a QR decomposition stored in compact (Householder) form.
+//'
+//' @param qr numeric matrix containing the QR decomposition of \eqn{X}
+//'   in compact form (as returned by \code{qr_fast()}).
+//' @param tau numeric vector of Householder coefficients.
+//' @param y numeric response vector of length \eqn{n}.
+//' @param pivot optional integer vector of length \eqn{p} containing the
+//'   1-based column permutation used during the QR factorization. If supplied,
+//'   the returned coefficients are reordered to match the original column order.
+//' @param rank optional integer specifying the numerical rank of \eqn{X}. If
+//'   supplied, only the leading \code{rank} components are used in the
+//'   triangular solve.
+//'
+//' @return a numeric vector of regression coefficients.
+//'
+//' @details
+//' The coefficients are obtained by first computing \eqn{Q^\top y}
+//' and then solving the resulting upper-triangular system involving
+//' the matrix \eqn{R}. The orthogonal matrix \eqn{Q} is never formed
+//' explicitly.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' qr_res <- fastQR::qr_fast(X)
+//' coef1  <- fastQR::qr_coef(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+//'
+//' ## reference computation
+//' coef2 <- base::qr.coef(base::qr(X), y)
+//'
+//' max(abs(coef1 - coef2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_coef(const Eigen::MatrixXd& qr,
+                        const Eigen::VectorXd& tau,
+                        const Eigen::VectorXd& y,
+                        Rcpp::Nullable<Rcpp::NumericVector> pivot = R_NilValue,
+                        Rcpp::Nullable<int> rank = R_NilValue) {
+  
+  int p = qr.cols(), n = qr.rows(), rank_ = 0, orig = 0;
+  if (n != y.size()) {
+    Rcpp::stop("Number of rows in 'qr' must match length of 'y'.");
+  }
+  arma::uvec pivot_(p);                   pivot_.zeros();
+  Eigen::VectorXd beta_hat = VectorXd::Zero(p);
+  
+  /* ::::::::::::::::::::::::::::::::::::::::::::::
+   check for NULL:                                    */
+  if (rank.isNotNull()) {
+    rank_ = Rcpp::as<int>(rank);
+  } else {
+    rank_ = p;
+  }
+
+  /* ::::::::::::::::::::::::::::::::::::::::::::::
+   unpivot to original column order                */
+  if (pivot.isNotNull()) {
+    /* Nullable output declaration */
+    Rcpp::NumericVector pivot_tmp(pivot);
+    
+    // Transform Rcpp vector "vec_rcpp" into an Eigen vector
+    pivot_ = Rcpp::as<arma::uvec>(wrap(pivot_tmp));
+    
+    /* ::::::::::::::::::::::::::::::::::::::::::::::
+     compute the regression coefficients                 */
+    Eigen::VectorXd beta_piv = qr_coef_rank(qr, tau, y, rank_);
+        
+    // unpivot to original column order (pivot is 1-based: pivot[j] = original index of j-th pivoted col)
+    for (Index j = 0; j < p; ++j) {
+      orig           = pivot_[j] - 1;
+      beta_hat(orig) = beta_piv(j);
+    }
+  } else {
+    /* ::::::::::::::::::::::::::::::::::::::::::::::
+     compute the regression coefficients                 */
+    Eigen::VectorXd beta_piv = qr_coef_rank(qr, tau, y, rank_);
+    beta_hat                 = beta_piv;
+  }
+
+  // return output
+  return beta_hat;
+}
+
+//' Compute fitted values from a QR decomposition
+//'
+//' Computes the fitted values \eqn{\widehat y = X\widehat\beta} for a linear
+//' least-squares problem using a QR decomposition stored in compact
+//' (Householder) form.
+//'
+//' @param qr Numeric matrix containing the QR decomposition of \eqn{X}
+//'   in compact form (as returned by \code{qr_fast()}).
+//' @param tau numeric vector of Householder coefficients.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector of fitted values \eqn{\hat y}.
+//'
+//' @details
+//' The fitted values are computed as
+//' \deqn{\widehat y = Q Q^\top y}
+//' without explicitly forming the orthogonal matrix \eqn{Q}. The
+//' computation relies on the Householder reflectors stored in
+//' \code{qr} and \code{tau}.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' qr_res <- fastQR::qr_fast(X)
+//' yhat1  <- fastQR::qr_fitted(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+//'
+//' ## reference computation
+//' yhat2 <- base::qr.fitted(base::qr(X), y)
+//'
+//' max(abs(yhat1 - yhat2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_fitted(const Eigen::MatrixXd& qr,
+                          const Eigen::VectorXd& tau,
+                          const Eigen::VectorXd& y) {
+  
+  int n = qr.rows();
+  if (n != y.size()) {
+    Rcpp::stop("Number of rows in 'qr' must match length of 'y'.");
+  }
+  
+  // compute the fitted values QQ^T y
+  VectorXd fitted = qr_fitted_rank(qr, tau, y);
+  
+  // return fitted values
+  return fitted;
+}
+
+//' Compute residuals from a QR decomposition
+//'
+//' Computes the residual vector \eqn{r = y - \widehat y} for a linear
+//' least-squares problem using a QR decomposition stored in compact
+//' (Householder) form.
+//'
+//' @param qr numeric matrix containing the QR decomposition of \eqn{X}
+//'   in compact form (as returned by \code{qr_fast()}).
+//' @param tau numeric vector of Householder coefficients.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector of residuals of dimension \eqn{n}.
+//'
+//' @details
+//' The residuals are computed as
+//' \deqn{r = y - Q Q^\top y}
+//' without explicitly forming the orthogonal matrix \eqn{Q}. The
+//' computation relies on the Householder reflectors stored in
+//' \code{qr} and \code{tau}.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' qr_res <- fastQR::qr_fast(X)
+//' r1     <- fastQR::qr_resid(qr = qr_res$qr, tau = qr_res$qraux, y = y)
+//'
+//' ## reference computation
+//' r2 <- base::qr.resid(base::qr(X), y)
+//'
+//' max(abs(r1 - r2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_resid(const Eigen::MatrixXd& qr,
+                         const Eigen::VectorXd& tau,
+                         const Eigen::VectorXd& y) {
+  
+  int n = qr.rows();
+  if (n != y.size()) {
+    Rcpp::stop("Number of rows in 'qr' must match length of 'y'.");
+  }
+
+  // compute the residuals y - QQ^T y
+  VectorXd resid = y - qr_fitted_rank(qr, tau, y);
+  
+  // return residuals 
+  return resid;
+}
+
+//' Compute least-squares coefficients using QR decomposition
+//'
+//' Computes the coefficient vector \eqn{\hat\beta} solving the
+//' least-squares problem \eqn{\min_\beta \|y - X\beta\|_2},
+//' using a QR decomposition computed internally.
+//'
+//' @param X numeric matrix of dimension \eqn{n \times p}.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector of regression coefficients.
+//'
+//' @details
+//' The QR decomposition of \eqn{X} is computed internally. The coefficients
+//' are obtained by first computing \eqn{Q^\top y} and then solving the
+//' resulting upper-triangular system involving the matrix \eqn{R}.
+//' The orthogonal matrix \eqn{Q} is never formed explicitly.
+//'
+//' This function is intended as a convenience wrapper for least-squares
+//' estimation when the explicit QR factors are not required.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' coef1 <- fastQR::qr_lse_coef(X, y)
+//'
+//' ## reference computation
+//' coef2 <- base::qr.coef(base::qr(X), y)
+//'
+//' max(abs(coef1 - coef2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_lse_coef(const Eigen::MatrixXd& X,
+                            const Eigen::VectorXd& y) {
+  HouseholderQR<MatrixXd> qr(X);
+  return qr.solve(y);
+}
+
+//' Compute fitted values using QR decomposition
+//'
+//' Computes the fitted values \eqn{\hat y = X\hat\beta} for a linear
+//' least-squares problem using a QR decomposition computed internally.
+//'
+//' @param X numeric matrix of dimension \eqn{n \times p}.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector of fitted values \eqn{\hat y}.
+//'
+//' @details
+//' The QR decomposition of \eqn{X} is computed internally. The fitted
+//' values are obtained as
+//' \deqn{\widehat y = Q Q^\top y}
+//' without explicitly forming the orthogonal matrix \eqn{Q}.
+//'
+//' This function is intended as a convenience wrapper for least-squares
+//' computations when the explicit QR factors are not required.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' yhat1 <- fastQR::qr_lse_fitted(X, y)
+//'
+//' ## reference computation
+//' yhat2 <- base::qr.fitted(base::qr(X), y)
+//'
+//' max(abs(yhat1 - yhat2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_lse_fitted(const Eigen::MatrixXd& X,
+                              const Eigen::VectorXd& y) {
+  HouseholderQR<MatrixXd> qr(X);
+  VectorXd coef = qr.solve(y);
+  return X * coef;
+}
+
+//' Compute residuals using QR decomposition
+//'
+//' Computes the residual vector \eqn{r = y - \hat y} for a linear
+//' least-squares problem using a QR decomposition computed internally.
+//'
+//' @param X numeric matrix of dimension \eqn{n \times p}.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector of residuals.
+//'
+//' @details
+//' The QR decomposition of \eqn{X} is computed internally. The residuals
+//' are obtained as
+//' \deqn{r = y - Q Q^\top y}
+//' without explicitly forming the orthogonal matrix \eqn{Q}.
+//'
+//' This function is intended as a convenience wrapper for least-squares
+//' computations when the explicit QR factors are not required.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' r1 <- fastQR::qr_lse_resid(X, y)
+//'
+//' ## reference computation
+//' r2 <- base::qr.resid(base::qr(X), y)
+//'
+//' max(abs(r1 - r2))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_lse_resid(const Eigen::MatrixXd& X,
+                             const Eigen::VectorXd& y) {
+  HouseholderQR<MatrixXd> qr(X);
+  VectorXd coef = qr.solve(y);
+  return y - X * coef;
+}
+
+//' Compute Q'y for a least-squares problem
+//'
+//' Computes the product \eqn{Q^\top y}, where \eqn{Q} is the orthogonal
+//' matrix from the QR decomposition of the design matrix \eqn{X}.
+//'
+//' @param X numeric matrix of dimension \eqn{n \times p}.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector equal to \eqn{Q^\top y}.
+//'
+//' @details
+//' The QR decomposition of \eqn{X} is computed internally, and the
+//' orthogonal matrix \eqn{Q} is never formed explicitly. The product
+//' \eqn{Q^\top y} is evaluated efficiently using Householder reflectors.
+//'
+//' This function is intended as a convenience wrapper for least-squares
+//' computations when the explicit QR factors are not required.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' res1 <- fastQR::qr_lse_Qty(X, y)
+//'
+//' ## reference computation
+//' res2 <- crossprod(base::qr.Q(base::qr(X), complete = TRUE), y)
+//'
+//' max(abs(res1 - drop(res2)))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_lse_Qty(const Eigen::MatrixXd& X,
+                           const Eigen::VectorXd& y) {
+  HouseholderQR<MatrixXd> qr(X);
+  MatrixXd Q = qr.householderQ() * MatrixXd::Identity(X.rows(), X.cols());
+  return Q.transpose() * y;
+}
+
+//' Compute Qy for a least-squares problem
+//'
+//' Computes the product \eqn{Q y}, where \eqn{Q} is the orthogonal
+//' matrix from the QR decomposition of the design matrix \eqn{X}.
+//'
+//' @param X numeric matrix of dimension \eqn{n \times p}.
+//' @param y numeric response vector of length \eqn{n}.
+//'
+//' @return a numeric vector equal to \eqn{Q y}.
+//'
+//' @details
+//' The QR decomposition of \eqn{X} is computed internally, and the
+//' orthogonal matrix \eqn{Q} is never formed explicitly. The product
+//' \eqn{Q y} is evaluated efficiently using Householder reflectors.
+//'
+//' This function is intended as a convenience wrapper for least-squares
+//' computations when the explicit QR factors are not required.
+//'
+//' @examples
+//' set.seed(1)
+//' n <- 10; p <- 4
+//' X <- matrix(rnorm(n * p), n, p)
+//' y <- rnorm(n)
+//'
+//' res1 <- fastQR::qr_lse_Qy(X, y)
+//'
+//' ## reference computation
+//' res2 <- base::qr.Q(base::qr(X), complete = TRUE) %*% y
+//'
+//' max(abs(res1 - drop(res2)))
+//'
+// [[Rcpp::export]]
+Eigen::VectorXd qr_lse_Qy(const Eigen::MatrixXd& X,
+                          const Eigen::VectorXd& y) {
+  HouseholderQR<MatrixXd> qr(X);
+  MatrixXd Q = qr.householderQ() * MatrixXd::Identity(X.rows(), X.cols());
+  return Q * y;
 }

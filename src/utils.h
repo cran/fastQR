@@ -57,5 +57,4 @@ Eigen::MatrixXd mat_slicing_byrow3 (const Eigen::MatrixXd& X,
 
 
 
-
 #endif

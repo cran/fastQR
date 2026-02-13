@@ -22,6 +22,7 @@ using namespace arma;
 //' @name rupdate
 //' @title Fast updating of the R matrix
 //' @description updates the R factorization when \eqn{m \geq 1} rows or columns are added to the matrix \eqn{X \in \mathbb{R}^{n \times p}}, where \eqn{n > p}. The R factorization of \eqn{X} produces an upper triangular matrix \eqn{R \in \mathbb{R}^{p \times p}} such that \eqn{X^\top X = R^\top R}. For more details on this method, refer to Golub and Van Loan (2013). Columns can only be added in positions \eqn{p+1} through \eqn{p+m}, while the position of added rows does not need to be specified.
+//' @param X the current \eqn{n\times p} matrix, prior to the addition of any rows or columns.
 //' @param R a \eqn{p\times p} upper triangular matrix.
 //' @param U either a \eqn{n\times m} matrix or a \eqn{p\times m} matrix of columns or rows to be added.
 //' @param type either 'row' of 'column', for adding rows or columns.
@@ -163,7 +164,7 @@ Eigen::MatrixXd rupdate (const Eigen::MatrixXd& X,
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    get dimensions                                  */
   const int Q_nrow = X.rows();
-  const int Q_ncol = X.rows();
+  const int Q_ncol = X.cols();
   const int R_nrow = R.rows();
   const int R_ncol = R.cols();                // p
   const int m      = U.cols();                // m
@@ -198,7 +199,7 @@ Eigen::MatrixXd rupdate (const Eigen::MatrixXd& X,
   /* ::::::::::::::::::::::::::::::::::::::::::::::
    Pre-processing: Q, R and U matrices:            */
   if (!fast_) {
-    if (Q_ncol <= R_ncol) {
+    if (Q_nrow <= R_ncol) {
       stop("* rupdate : p is greater than n.");
     }
     if (R_nrow != R_ncol) {
@@ -242,12 +243,16 @@ Eigen::MatrixXd rupdate (const Eigen::MatrixXd& X,
     // get the dimension of the matrix U
     if (!fast_) {
       if (U.rows() != R_ncol) {
-        stop("* rupdate : two inputs 'Q' and 'U' have non-matching dimensions.");
+        stop("* rupdate : two inputs 'R' and 'U' have non-matching dimensions.");
+      }
+      if (U.rows() != Q_ncol) {
+        stop("* rupdate : two inputs 'X' and 'U' have non-matching dimensions.");
       }
     }
     if (m == 1) {
       // perform add one row
-      Rs = thinqraddrow(R_in, U);
+      //Rs = thinqraddrow(R_in, U);
+      Rs = thinqraddrow(R_in, U.col(0));
     } else {
       // perform add m rows
       Rs = thinqraddmrows(R_in, U.transpose());
@@ -263,7 +268,7 @@ Eigen::MatrixXd rupdate (const Eigen::MatrixXd& X,
 //' @description rdowndate provides the update of the thin R matrix of the QR factorization after the deletion of \eqn{m\geq 1} rows or columns to the matrix \eqn{X\in\mathbb{R}^{n\times p}} with \eqn{n>p}. The R factorization of the matrix \eqn{X} returns the upper triangular matrix \eqn{R\in\mathbb{R}^{p\times p}} such that \eqn{X^\top X=R^\top R}. See Golub and Van Loan (2013) for further details on the method.
 //' @param R a \eqn{p\times p} upper triangular matrix.
 //' @param k position where the columns or the rows are removed.
-//' @param m number of columns or rows to be removed.
+//' @param m number of columns or rows to be removed. It is not required when deleting columns. If NULL, it defaults to the number of columns in \eqn{U}.
 //' @param U a \eqn{p\times m} matrix of rows to be removed. It should only be provided when rows are being removed.
 //' @param type either 'row' of 'column', for removing rows or columns.
 //' @param fast fast mode: disable to check whether the provided matrices are valid inputs. Default is FALSE.
@@ -430,6 +435,9 @@ Eigen::MatrixXd rdowndate (const Eigen::MatrixXd& R,
     if ((type_ != "column") && (type_ != "row")) {
       type_ = "column";
     }
+    if ((type_ == "column") && (U.isNotNull())) {
+      Rcpp::warning("* rdowndate: the matrix U is not required when deleting columns. It has been ignored!");
+    }
   } else {
     type_ = "column";
   }
@@ -443,10 +451,8 @@ Eigen::MatrixXd rdowndate (const Eigen::MatrixXd& R,
   } else {
     if (type_ == "column") {
       m_ = R_ncol;
-      warning("* rdowndate : m has been set equal to the number of columns of R!");
     } else {
       m_ = R_nrow;
-      warning("* rdowndate : m has been set equal to the number of rows of R!");
     }
   }
   if (U.isNotNull()) {
@@ -456,14 +462,14 @@ Eigen::MatrixXd rdowndate (const Eigen::MatrixXd& R,
     // Transform Rcpp vector "vec_rcpp" into an Eigen vector
     Eigen::MatrixXd U_ = Rcpp::as<Eigen::MatrixXd>(wrap(U_tmp));
     
-    // warning message
-    if (!fast_) {
-      warning("* rdowndate : m has been set equal to the the dimension of the provided matrix U!");
+    // Rcpp::warning message
+    if (type_ == "row") {
+      if ((U_.cols() != m_) && (m.isNotNull())) {
+        m_ = U_.cols();
+        Rcpp::warning("* rdowndate: m has been set to match the number of columns of the provided matrix U!");
+      }
     }
-    
-    // get the dimension
-    m_ = U_.cols();
-    
+
     /* ::::::::::::::::::::::::::::::::::::::::::::::
      Update the QR matrix: adding one or more rows:     */
     if (type_ == "row") {
@@ -471,16 +477,20 @@ Eigen::MatrixXd rdowndate (const Eigen::MatrixXd& R,
       // get the dimension of the matrix U
       if (!fast_) {
         if (U_.rows() != R_ncol) {
-          stop("* rupdate : two inputs 'R' and 'U' have non-matching dimensions.");
+          Rcpp::stop("* rdowndate : two inputs 'R' and 'U' have non-matching dimensions.");
         }
       }
       if (m_ == 1) {
         // perform add one row
-        Rs = thinqrdeleterow(R, U_);
+        Rs = thinqrdeleterow(R, U_.col(0));
       } else {
         // perform add m rows
         Rs = thinqrdeletemrows(R, U_.transpose());
       }
+    }
+  } else {
+    if (type_ == "row") {
+      stop("* rdowndate : the input matrix 'U' should be provided when deleting rows.");
     }
   }
 
